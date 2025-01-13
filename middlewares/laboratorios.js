@@ -149,8 +149,12 @@ async function gerarPdfLaboratorios(req, res) {
         try {
           const tempImagePath = path.join(
             process.cwd(),
-            `temp_image_${laboratorio._id}.png`
+            `tmp/temp_image_${laboratorio._id}.png`
           );
+
+          fs.writeFileSync(tempImagePath, imageBuffer);
+
+          console.log("Imagem salva em:", tempImagePath);
 
           doc.image(tempImagePath, { width: 100, height: 100 });
           doc.moveDown(10);
