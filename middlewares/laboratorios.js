@@ -152,10 +152,6 @@ async function gerarPdfLaboratorios(req, res) {
             `temp_image_${laboratorio._id}.png`
           );
 
-          fs.writeFileSync(tempImagePath, imageBuffer);
-
-          console.log("Imagem salva em:", tempImagePath);
-
           doc.image(tempImagePath, { width: 100, height: 100 });
           doc.moveDown(10);
 
