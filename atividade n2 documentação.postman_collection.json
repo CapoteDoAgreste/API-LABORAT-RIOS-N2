@@ -1,0 +1,184 @@
+{
+	"info": {
+		"_postman_id": "f93749a1-9cd6-48b8-b078-1c5452686ac6",
+		"name": "atividade n2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "27446949"
+	},
+	"item": [
+		{
+			"name": "login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let jsonData = pm.response.body\r",
+							"pm.collectionVariables.set(\"token\",body.token)"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\":\"admin@admin.com\",\r\n    \"password\":\"admin\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "https://api-laborat-rios-n2-tales-de-lima-filhos-projects.vercel.app/api/login",
+				"description": "Rota de login, retorna um jwt token que deve ser utilizado para se autenticar nas demais rotas"
+			},
+			"response": []
+		},
+		{
+			"name": "Post Laboratorio",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "nome",
+							"value": "Sala da capotaria3",
+							"type": "text"
+						},
+						{
+							"key": "descricao",
+							"value": "Capotarias acontecem nessa sala3",
+							"type": "text"
+						},
+						{
+							"key": "capacidade",
+							"value": "1000",
+							"type": "text"
+						},
+						{
+							"key": "foto",
+							"type": "file",
+							"src": "/E:/download[s/248044.png"
+						}
+					]
+				},
+				"url": "https://api-laborat-rios-n2-tales-de-lima-filhos-projects.vercel.app/api/laboratorios/novo",
+				"description": "Utiliza um jwt token para se autenticar, ela serve para criar um novo laboratório, sesndo necessário enviar: nome, capacidade, descrição e foto, todos dentro de um formData."
+			},
+			"response": []
+		},
+		{
+			"name": "getDisponívelApenasDuranteASemana",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "nome",
+							"value": "Sala da capotaria",
+							"type": "text"
+						},
+						{
+							"key": "descricao",
+							"value": "Capotarias acontecem nessa sala",
+							"type": "text"
+						},
+						{
+							"key": "capacidade",
+							"value": "1000",
+							"type": "text"
+						},
+						{
+							"key": "foto",
+							"type": "file",
+							"src": "/E:/download[s/248044.png"
+						}
+					]
+				},
+				"url": "https://api-laborat-rios-n2-tales-de-lima-filhos-projects.vercel.app/api/laboratorios",
+				"description": "Este é um get que retorna todas os laboratórios criados, mas ele funciona apenas durante a semana."
+			},
+			"response": []
+		},
+		{
+			"name": "Laboratorio PDF",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "nome",
+							"value": "Sala da capotaria",
+							"type": "text"
+						},
+						{
+							"key": "descricao",
+							"value": "Capotarias acontecem nessa sala",
+							"type": "text"
+						},
+						{
+							"key": "capacidade",
+							"value": "1000",
+							"type": "text"
+						},
+						{
+							"key": "foto",
+							"type": "file",
+							"src": "/E:/download[s/248044.png"
+						}
+					]
+				},
+				"url": "https://api-laborat-rios-n2-tales-de-lima-filhos-projects.vercel.app/api/laboratorios/pdf",
+				"description": "Este é um get que retorna um pdf contendo as informações dos laboratórios, incluindo a foto."
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ODQwOTRjY2Y3YWQ1MmQ5NmM4Y2Q0ZSIsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwiaWF0IjoxNzM2NzMxMjYyLCJleHAiOjE3MzY3MzQ4NjJ9.gfUaJ9VCk2dkOCvKq1y49ITVGMZ-TY9lUZpZtdOM-n8"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
