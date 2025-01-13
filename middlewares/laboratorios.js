@@ -1,0 +1,188 @@
+const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const connectDB = require("../db/db");
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const { Readable } = require("stream");
+const imageSize = require("image-size");
+const path = require("path");
+const { Binary } = require("mongodb");
+
+const SECRET_KEY = process.env.JWT_SECRET;
+
+// Configuração do multer para armazenamento de arquivos
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+function verifyToken(req, res, next) {
+  const token =
+    req.headers.authorization && req.headers.authorization.split(" ")[1];
+
+  if (!token) {
+    return res
+      .status(401)
+      .send({ error: "Token de autenticação é necessário." });
+  }
+
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error("Erro ao verificar o token:", error.message);
+    return res.status(401).send({ error: "Token inválido ou expirado." });
+  }
+}
+
+async function postLaboratorio(req, res) {
+  const { nome, descricao, capacidade } = req.body;
+  const foto = req.file;
+
+  if (!nome || !descricao || !capacidade || !foto) {
+    return res
+      .status(400)
+      .send({ error: "Nome, descrição, capacidade e foto são obrigatórios." });
+  }
+
+  try {
+    const fotoBinaria = foto.buffer;
+
+    const client = await connectDB();
+    const laboratorioCollection = client
+      .db("BancoBancoso")
+      .collection("laboratorio");
+
+    const newLaboratorio = {
+      nome,
+      descricao,
+      capacidade: Number(capacidade),
+      foto: fotoBinaria,
+      createdAt: new Date(),
+      createdBy: req.user.id,
+    };
+
+    const result = await laboratorioCollection.insertOne(newLaboratorio);
+
+    const laboratorioCriado = await laboratorioCollection.findOne({
+      _id: result.insertedId,
+    });
+
+    res.status(201).send({
+      message: "Laboratório criado com sucesso",
+      laboratorio: laboratorioCriado,
+    });
+  } catch (error) {
+    console.error("Erro ao criar laboratório:", error.message);
+    res.status(500).send({ error: "Erro interno do servidor." });
+  }
+}
+
+function isDiaUtil(req, res, next) {
+  const diasUteis = [1, 2, 3, 4, 5];
+  const hoje = new Date().getDay();
+
+  if (!diasUteis.includes(hoje)) {
+    return res
+      .status(403)
+      .send({ error: "Esta rota só pode ser acessada em dias úteis." });
+  }
+
+  next();
+}
+
+async function getAllLaboratorios(req, res) {
+  try {
+    const client = await connectDB();
+    const laboratorioCollection = client
+      .db("BancoBancoso")
+      .collection("laboratorio");
+
+    const laboratorios = await laboratorioCollection.find().toArray();
+
+    res.status(200).send({
+      message: "Laboratórios encontrados com sucesso",
+      laboratorios,
+    });
+  } catch (error) {
+    console.error("Erro ao buscar laboratórios:", error.message);
+    res.status(500).send({ error: "Erro interno do servidor." });
+  }
+}
+
+async function gerarPdfLaboratorios(req, res) {
+  try {
+    const client = await connectDB();
+    const laboratorioCollection = client
+      .db("BancoBancoso")
+      .collection("laboratorio");
+
+    const laboratorios = await laboratorioCollection.find().toArray();
+
+    const doc = new PDFDocument();
+
+    doc.pipe(res);
+
+    doc.fontSize(16).text("Lista de Laboratórios", { align: "center" });
+    doc.moveDown();
+
+    for (const laboratorio of laboratorios) {
+      doc.fontSize(12).text(`Nome: ${laboratorio.nome}`);
+      doc.text(`Descrição: ${laboratorio.descricao}`);
+      doc.text(`Capacidade: ${laboratorio.capacidade}`);
+      doc.moveDown();
+
+      let imageBuffer = null;
+
+      if (laboratorio.foto && laboratorio.foto instanceof Binary) {
+        imageBuffer = laboratorio.foto.buffer;
+      } else if (Buffer.isBuffer(laboratorio.foto)) {
+        imageBuffer = laboratorio.foto;
+      }
+
+      console.log("Imagem Buffer:", imageBuffer);
+      console.log(
+        "Imagem Buffer (tamanho):",
+        imageBuffer ? imageBuffer.length : 0
+      );
+
+      if (imageBuffer && imageBuffer.length > 0) {
+        try {
+          const tempImagePath = path.join(
+            process.cwd(),
+            `temp_image_${laboratorio._id}.png`
+          );
+
+          fs.writeFileSync(tempImagePath, imageBuffer);
+
+          console.log("Imagem salva em:", tempImagePath);
+
+          doc.image(tempImagePath, { width: 100, height: 100 });
+          doc.moveDown(10);
+
+          fs.unlinkSync(tempImagePath);
+        } catch (err) {
+          console.error("Erro ao adicionar imagem no PDF:", err);
+          doc.text("Erro ao carregar imagem.");
+        }
+      } else {
+        doc.text("Imagem inválida ou ausente.");
+      }
+
+      doc.moveDown();
+    }
+
+    doc.end();
+  } catch (error) {
+    console.error("Erro ao gerar o PDF:", error);
+    res.status(500).send({ error: "Erro ao gerar o PDF." });
+  }
+}
+
+module.exports = {
+  upload,
+  verifyToken,
+  postLaboratorio,
+  getAllLaboratorios,
+  isDiaUtil,
+  gerarPdfLaboratorios,
+};
