@@ -149,8 +149,6 @@ async function gerarPdfLaboratorios(req, res) {
         try {
           doc.image(imageBuffer, { width: 100, height: 100 });
           doc.moveDown(10);
-
-          fs.unlinkSync(tempImagePath);
         } catch (err) {
           console.error("Erro ao adicionar imagem no PDF:", err);
           doc.text("Erro ao carregar imagem.");
